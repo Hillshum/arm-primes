@@ -15,9 +15,6 @@ prime_message:
 .global _start
 _start:
 
-    mov r0, #101
-    bl itoa
-    
     mov r6, #15 // upper bound (must be odd)
     mov r5, #3 // lower bound
     
