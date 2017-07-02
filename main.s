@@ -3,12 +3,16 @@
 .set WRITE, 4
 .set OPEN, 5
 .set CLOSE, 6
+.set BRK, 45
 
 
 // Constants
 .set O_WRONLY, 1
 .set O_CREAT, 64
-.set CREAT_FLAGS, (O_WRONLY | O_CREAT)
+.set O_TRUNC, 512
+.set CREAT_FLAGS, (O_WRONLY | O_CREAT | O_TRUNC)
+
+.set MEM_BLOCK, 0x1000
 
 
 .balign 2
@@ -28,6 +32,12 @@ filename: .asciz "primes.txt"
 prime:
     .space 4
 
+init_break:
+    .word 0
+
+curr_break:
+    .word 0
+
 .text
 .global _start
 _start:
@@ -37,14 +47,39 @@ _start:
     movw r0, #:lower16:filename
     movt r0, #:upper16:filename
 
+
     movw r1, #CREAT_FLAGS
     movw r2, #0644
     mov r7, #OPEN
     svc #0
     mov r9, r0 // file handle in r9
 
+    // get some memory
 
-    mov r6, #19 // upper bound (must be odd)
+    mov r7, #BRK
+    mov r0, #0
+    svc #0
+
+    movw r4, #:lower16:init_break
+    movt r4, #:upper16:init_break
+    str r0, [r4]
+has_mem:
+    mov r10, r0 // location in memory to write to
+    
+    add r0, r0, #MEM_BLOCK
+    mov r7, #BRK
+    svc #0
+
+    movw r4, #:lower16:curr_break
+    movt r4, #:upper16:curr_break
+    str r0, [r4]
+    mov r11, r0 // final location
+
+
+
+
+    // initialize parameters
+    mov r6, #50// upper bound 
     mov r5, #3 // lower bound
     
 
@@ -67,14 +102,19 @@ loop:
 test:
     add r4, r4, #2
     cmp r6, r4
-    beq after
+    bls after
 
     b loop
 
     
 
 after:
-    mov r11, r0 // save the return value
+
+    movw r1, #:lower16:init_break
+    movt r1, #:upper16:init_break
+    ldr r2, [r1]
+    sub r2, r10, r2 // write should only write as many as are queued
+    bl writing // write whatever is left
 
     // close the file
     mov r0, r9
@@ -86,22 +126,19 @@ after:
 
 
 found_prime:
-    ldr r1, =prime
-    add r0, r0, #48
-    str r0, [r1]
-    mov r0, r1
-    mov r0, r1
-    mov r1, #4
-    bl write
-    /*
+    str r0, [r10],  #4
+    cmp r10, r11
+    mov r2, #MEM_BLOCK // write a full memory block of primes
+    bleq writing
+    b test
+
+writing:
+
+    sub r10, r11, #MEM_BLOCK
+    mov r1, r10
     mov r0, r9
-    mov r3, #4
 
     mov r7, #WRITE
     svc #0
-    */
 
-    ldr r0, =prime_message
-    mov r1, #MESSAGE_LEN
-    bl write
-    b test
+    bx lr
