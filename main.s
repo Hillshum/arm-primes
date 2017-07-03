@@ -56,30 +56,18 @@ _start:
 
     // get some memory
 
-    mov r7, #BRK
-    mov r0, #0
-    svc #0
-
-    movw r4, #:lower16:init_break
-    movt r4, #:upper16:init_break
-    str r0, [r4]
-has_mem:
+    bl get_initial
     mov r10, r0 // location in memory to write to
     
-    add r0, r0, #MEM_BLOCK
-    mov r7, #BRK
-    svc #0
-
-    movw r4, #:lower16:curr_break
-    movt r4, #:upper16:curr_break
-    str r0, [r4]
+    mov r0, #MEM_BLOCK
+    bl get_more
     mov r11, r0 // final location
 
 
 
 
     // initialize parameters
-    mov r6, #50// upper bound 
+    mov r6, #0x00Ec0000 // upper bound 
     mov r5, #3 // lower bound
     
 
@@ -110,10 +98,8 @@ test:
 
 after:
 
-    movw r1, #:lower16:init_break
-    movt r1, #:upper16:init_break
-    ldr r2, [r1]
-    sub r2, r10, r2 // write should only write as many as are queued
+    bl get_initial
+    sub r2, r10, r0 // write should only write as many as are queued
     bl writing // write whatever is left
 
     // close the file
