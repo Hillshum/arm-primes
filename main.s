@@ -25,7 +25,7 @@ prime_message:
 newline:
     .ascii "\n"
 
-filename: .asciz "primes.txt"
+filename: .asciz "primes.bin"
     .set NAMESIZE, .-filename -1
 
 .data

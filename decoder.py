@@ -2,7 +2,7 @@
 
 from sys import argv
 
-FILENAME = 'primes.txt'
+FILENAME = 'primes.bin'
 
 num_primes = 50 if len(argv) < 2 else argv[1]
 start = 'begin' if len(argv) < 3 else argv[2]
