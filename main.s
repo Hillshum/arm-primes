@@ -13,7 +13,6 @@
 .set CREAT_FLAGS, (O_WRONLY | O_CREAT | O_TRUNC)
 
 .set MEM_BLOCK, 0x1000
-.set LOAD_MEM_THRESHOLD, 0x1000
 
 
 .balign 2
@@ -29,15 +28,7 @@ newline:
 filename: .asciz "primes.bin"
     .set NAMESIZE, .-filename -1
 
-.data
-prime:
-    .space 4
 
-init_break:
-    .word 0
-
-curr_break:
-    .word 0
 
 .text
 .global _start
@@ -74,7 +65,7 @@ _start:
 
     // initialize parameters
     mov r6, #0x00Ec0000 // upper bound 
-   // mov r6, #0x1000
+    //mov r6, #0x100
     mov r4, #5 // lower bound
     
 
@@ -104,8 +95,9 @@ test:
 
 after:
 
-    bl get_initial
-    sub r2, r10, r0 // write should only write as many as are queued
+    sub r2, r11, #MEM_BLOCK
+    sub r2, r10, r2
+
     bl writing // write whatever is left
 
     // close the file
@@ -119,6 +111,7 @@ after:
 found_prime:
     str r0, [r10],  #4
     cmp r10, r11
+    moveq r2, #MEM_BLOCK // write a full memory block of primes
     bleq writing
     b test
 
@@ -128,13 +121,14 @@ writing:
     mov r10, r11
     sub r1, r11, #MEM_BLOCK
     mov r0, r9
-    mov r2, #MEM_BLOCK // write a full memory block of primes
 
     mov r7, #WRITE
     svc #0
+
     mov r0, #MEM_BLOCK
     bl get_more
     mov r11, r0
+
     
     pop {r1, pc}
 
