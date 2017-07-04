@@ -7,10 +7,11 @@ is_prime: // r0 is the potential prime
     push {r3, r4, r5, r6, r7, r8, r9, r10, r11, lr}
 
     mov r4, r0 // Save the input
+    mov r7, r1 // pointer to next prime
     bl sqrt
     mov r5, r0
     
-    mov r6, #3 // Number divided by
+    ldr r6, [r7], #4 // Number divided by
 
 test:
     cmp r6, r5
@@ -25,7 +26,7 @@ after_mod:
     cmp r0, #0
     beq composite
 
-    add r6, r6, #2
+    ldr r6, [r7], #4
 
     b test
 

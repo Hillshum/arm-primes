@@ -59,24 +59,30 @@ _start:
 
     bl get_initial
     mov r10, r0 // location in memory to write to
+    mov r5, r0 // start of known primes
+
     
     mov r0, #MEM_BLOCK
     bl get_more
     mov r11, r0 // final location
+    mov r0, #3
+    str r0, [r5] // Seed known primes
+    add r10, #4
 
 
 
 
     // initialize parameters
     mov r6, #0x00Ec0000 // upper bound 
-    //mov r6, #0x1000
-    mov r4, #3 // lower bound
+   // mov r6, #0x1000
+    mov r4, #5 // lower bound
     
 
     
 loop:
 
     mov r0, r4
+    mov r1, r5
     bl is_prime
 
     mov r8, r0
