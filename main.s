@@ -13,6 +13,7 @@
 .set CREAT_FLAGS, (O_WRONLY | O_CREAT | O_TRUNC)
 
 .set MEM_BLOCK, 0x1000
+.set LOAD_MEM_THRESHOLD, 0x1000
 
 
 .balign 2
@@ -68,10 +69,9 @@ _start:
 
     // initialize parameters
     mov r6, #0x00Ec0000 // upper bound 
-    mov r5, #3 // lower bound
+    //mov r6, #0x1000
+    mov r4, #3 // lower bound
     
-
-    mov r4, r5 // r4 has number getting tested
 
     
 loop:
@@ -106,7 +106,6 @@ after:
     mov r0, r9
     mov r7, #CLOSE
     svc #0
-
     mov r7, #EXIT
     svc #0
 
@@ -114,17 +113,23 @@ after:
 found_prime:
     str r0, [r10],  #4
     cmp r10, r11
-    mov r2, #MEM_BLOCK // write a full memory block of primes
     bleq writing
     b test
 
 writing:
+    push {r1, lr}
 
-    sub r10, r11, #MEM_BLOCK
-    mov r1, r10
+    mov r10, r11
+    sub r1, r11, #MEM_BLOCK
     mov r0, r9
+    mov r2, #MEM_BLOCK // write a full memory block of primes
 
     mov r7, #WRITE
     svc #0
+    mov r0, #MEM_BLOCK
+    bl get_more
+    mov r11, r0
+    
+    pop {r1, pc}
 
-    bx lr
+
